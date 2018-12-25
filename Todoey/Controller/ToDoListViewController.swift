@@ -16,12 +16,17 @@ func printd(_ message: String) {
 }
 class TodoListViewController: UITableViewController {
 
-    var itemArray : [String] = ["Find Mike", "Buy Eggos", "Destroy Demogorgon"]
+    var itemArray : [Item] = [
+        Item("Find Mike"),
+        Item("Buy Eggos"),
+        Item("Destroy Demogorgon")
+    ]
+    
     let defaults = UserDefaults.standard
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
             itemArray = items
         }
     }
@@ -29,7 +34,10 @@ class TodoListViewController: UITableViewController {
     //MARK - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
-        cell.textLabel?.text = itemArray[indexPath.row]
+        
+        let item = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done ? .checkmark : .none
         return cell
     }
 
@@ -40,9 +48,12 @@ class TodoListViewController: UITableViewController {
     //MARK - TableView Delegate Methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //print(itemArray[indexPath.row])
-        let selected = tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark ? true : false
-        tableView.cellForRow(at: indexPath)?.accessoryType = selected ? .none : .checkmark
+        let item = itemArray[indexPath.row]
+        item.done.toggle()
+        
+        tableView.cellForRow(at: indexPath)?.accessoryType = item.done ? .checkmark : .none
         tableView.deselectRow(at: indexPath, animated: true)
+        self.tableView.reloadData()
     }
     //MARK - Add New Items
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -51,7 +62,7 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Todoey Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
             //What willhappen onex the user clicks the Add Item buton
-            self.itemArray.append(textField.text!)
+            self.itemArray.append(Item(textField.text!))
             self.defaults.set(self.itemArray, forKey: "TodoListArray")
             self.tableView.reloadData()
         }
